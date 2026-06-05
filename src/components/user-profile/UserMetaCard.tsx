@@ -6,7 +6,7 @@ import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 interface Profile {
@@ -29,38 +29,56 @@ export default function UserMetaCard() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  
-  const supabase = createClient();
 
   useEffect(() => {
-    const fetchUserAndProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
-      if (user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        setProfile(profileData);
-        
-        // Initialize form with current values
-        if (profileData) {
-          setFirstName(profileData.first_name || "");
-          setLastName(profileData.last_name || "");
-          setEmail(profileData.email || user.email || "");
-        }
-      }
+    const configured = isSupabaseConfigured();
+    
+    if (!configured) {
       setIsLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchUserAndProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+
+        if (user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          setProfile(profileData);
+          
+          // Initialize form with current values
+          if (profileData) {
+            setFirstName(profileData.first_name || "");
+            setLastName(profileData.last_name || "");
+            setEmail(profileData.email || user.email || "");
+          }
+        }
+        setIsLoading(false);
+      } catch (error) {
+        // Silently handle errors when fetching profile
+      }
     };
 
     fetchUserAndProfile();
-  }, [supabase]);
+  }, []);
 
   const handleSave = async () => {
     if (!user) return;
+    
+    const supabase = createClient();
+    if (!supabase) return;
     
     setIsSaving(true);
     
@@ -104,6 +122,21 @@ export default function UserMetaCard() {
               <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If Supabase is not configured, show a placeholder
+  if (!isSupabaseConfigured() || !user) {
+    return (
+      <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h4 className="text-gray-600 dark:text-gray-400 text-center">Authentication not available</h4>
+          <p className="text-sm text-gray-500 dark:text-gray-500 text-center">Please sign in to view and edit your profile.</p>
         </div>
       </div>
     );

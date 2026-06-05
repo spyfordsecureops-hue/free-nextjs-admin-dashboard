@@ -25,6 +25,11 @@ export default function SignInForm() {
     startTransition(async () => {
       const supabase = createClient();
       
+      if (!supabase) {
+        setError("Authentication service is not configured. Please try again later.");
+        return;
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
