@@ -6,7 +6,7 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import type { User } from "@supabase/supabase-js";
+import type { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface Profile {
   id: string;
@@ -67,7 +67,7 @@ export default function UserDropdown() {
 
     // Subscribe to auth changes - only if supabase exists
     try {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           supabase
@@ -75,8 +75,8 @@ export default function UserDropdown() {
             .select('*')
             .eq('id', session.user.id)
             .single()
-            .then(({ data }) => setProfile(data))
-            .catch(error => console.error('[v0] Error fetching profile:', error));
+            .then(({ data }: { data: Profile | null }) => setProfile(data))
+            .catch((error: Error) => console.error('[v0] Error fetching profile:', error));
         } else {
           setProfile(null);
         }
