@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
@@ -22,10 +22,25 @@ export default function UserDropdown() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConfigured, setIsConfigured] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
+    // Check if Supabase is configured
+    const configured = isSupabaseConfigured();
+    setIsConfigured(configured);
+
+    if (!configured) {
+      setIsLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -61,10 +76,13 @@ export default function UserDropdown() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    const supabase = createClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     router.push('/signin');
     router.refresh();
   };
@@ -91,6 +109,20 @@ export default function UserDropdown() {
       <div className="flex items-center">
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-gray-200 dark:bg-gray-700 animate-pulse"></span>
         <span className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
+      </div>
+    );
+  }
+
+  // Show login link if Supabase is not configured or user is not logged in
+  if (!isConfigured || !user) {
+    return (
+      <div className="flex items-center gap-2">
+        <Link
+          href="/signin"
+          className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 dark:text-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700"
+        >
+          Sign In
+        </Link>
       </div>
     );
   }
