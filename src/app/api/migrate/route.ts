@@ -195,6 +195,10 @@ export async function POST() {
     );
   }
 
+  // Supabase's pooler presents a self-signed cert chain. Disable TLS rejection
+  // for this server-side migration connection so the schema can be applied.
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
   const pool = new Pool({ 
     connectionString: postgresUrl,
     ssl: { rejectUnauthorized: false }
