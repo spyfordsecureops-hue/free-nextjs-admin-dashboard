@@ -92,6 +92,17 @@ const othersItems: NavItem[] = [
       { name: "Sign Up", path: "/signup", pro: false },
     ],
   },
+  {
+    icon: <BoxCubeIcon />,
+    name: "Ecosystem",
+    subItems: [
+      { name: "Autonomous Cyber Defense", path: "/autonomous-defense", pro: false, new: true },
+      { name: "Evidence", path: "/evidence", pro: false, new: true },
+      { name: "Entities", path: "/entities", pro: false, new: true },
+      { name: "Threat Intelligence", path: "/threat-intelligence", pro: false, new: true },
+      { name: "Security Analytics", path: "/security-analytics", pro: false, new: true },
+    ],
+  },
 ];
 
 const AppSidebar: React.FC = () => {
