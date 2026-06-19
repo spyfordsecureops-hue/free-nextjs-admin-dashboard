@@ -103,6 +103,14 @@ const othersItems: NavItem[] = [
       { name: "Security Analytics", path: "/security-analytics", pro: false, new: true },
     ],
   },
+  {
+    icon: <ListIcon />,
+    name: "Secure Messages",
+    path: "/secure-messages",
+    subItems: [
+      { name: "Client Portal", path: "/secure-messages", pro: false, new: true },
+    ],
+  },
 ];
 
 const AppSidebar: React.FC = () => {
